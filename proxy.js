@@ -3,13 +3,20 @@ var http = require('http');
 console.log('starting proxy server');
 
 var server = http.createServer(function(request, response) {
-	console.log(" > request : %s", request.url);
+	console.log(" > request : %s%s", request.headers.host, request.url);
 
 	// build http options
+	var auth = "Basic " + new Buffer("username:password").toString('base64');
 	var options = {
-		host 	: "www.lockett.ca",
-		port 	: "80",
-		method  : "GET"
+		hostname	: "prox.com",
+		port 		: "80",
+		method  	: "GET",
+		path		: "http://" + request.headers.host + request.url,
+		headers: {
+			"Proxy-Authorization" : auth,
+			Host : request.headers.host
+		}
+		
 	};
 
 	var proxy_request = http.request(options, function(proxy_response) {
@@ -17,20 +24,18 @@ var server = http.createServer(function(request, response) {
 		console.log('HEADERS: ' + JSON.stringify(proxy_response.headers));
 		proxy_response.setEncoding('utf8');
 		proxy_response.on('data', function (chunk) {
-			console.log('BODY: ' + chunk);
 			response.write(chunk, 'binary');
 		});
-
-
+		proxy_response.on('end', function() {
+			response.end();
+		});
 	});
 
 	proxy_request.on('error', function(e) {
   		console.log('problem with request: ' + e.message);
 	});
 
-	proxy_request.end();
+	proxy_request.end();	
 
 }).listen(8082);
-
-
 
