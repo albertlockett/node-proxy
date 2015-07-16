@@ -9,7 +9,7 @@ var server = http.createServer(function(request, response) {
 	var auth = "Basic " + new Buffer("username:password");
 			.toString('base64');
 	var options = {
-		hostname	: "10.143.224.21",
+		hostname	: "proxy.com",
 		port 		: "80",
 		method  	: "GET",
 		path		: "http://" + request.headers.host + request.url,
