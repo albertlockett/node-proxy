@@ -6,9 +6,10 @@ var server = http.createServer(function(request, response) {
 	console.log(" > request : %s%s", request.headers.host, request.url);
 
 	// build http options
-	var auth = "Basic " + new Buffer("username:password").toString('base64');
+	var auth = "Basic " + new Buffer("username:password");
+			.toString('base64');
 	var options = {
-		hostname	: "prox.com",
+		hostname	: "10.143.224.21",
 		port 		: "80",
 		method  	: "GET",
 		path		: "http://" + request.headers.host + request.url,
@@ -22,13 +23,22 @@ var server = http.createServer(function(request, response) {
 	var proxy_request = http.request(options, function(proxy_response) {
 		console.log('STATUS: ' + proxy_response.statusCode);
 		console.log('HEADERS: ' + JSON.stringify(proxy_response.headers));
-		proxy_response.setEncoding('utf8');
+		
+		var responseHeaders = proxy_response.headers;
+		responseHeaders["connection"] = "keep-alive";
+		responseHeaders["transfer-encoding"] = "chunked";
+		response.writeHead(proxy_response.statusCode, responseHeaders);
+		
+		
 		proxy_response.on('data', function (chunk) {
+			//console.log(chunk);
 			response.write(chunk, 'binary');
 		});
 		proxy_response.on('end', function() {
 			response.end();
 		});
+		
+		//proxy_response.pipe(response);
 	});
 
 	proxy_request.on('error', function(e) {
